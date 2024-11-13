@@ -72,5 +72,22 @@ def determine_best_way(patient_info):
 def find_closest_hospital(address):
     return {"id": 1, "name": "Regional Hospital A"}
 
+@app.route('/delete_patient/<int:patient_id>', methods=['DELETE'])
+def delete_patient(patient_id):
+    try:
+        response = requests.delete(f'{PATIENT_DB_SERVICE_URL}/delete_patient/{patient_id}')
+        return jsonify(response.json()), response.status_code
+    except requests.exceptions.RequestException as e:
+        return jsonify({"status": "Error communicating with Patient Database Service", "error": str(e)}), 500
+
+@app.route('/delete_hospital/<int:hospital_id>', methods=['DELETE'])
+def delete_hospital(hospital_id):
+    try:
+        response = requests.delete(f'{HOSPITAL_SERVICE_URL}/delete_hospital/{hospital_id}')
+        return jsonify(response.json()), response.status_code
+    except requests.exceptions.RequestException as e:
+        return jsonify({"status": "Error communicating with Hospital Database Service", "error": str(e)}), 500
+
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)

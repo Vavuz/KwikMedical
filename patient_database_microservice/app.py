@@ -41,20 +41,6 @@ def add_patient():
     db.session.commit()
     return jsonify({"status": "Patient added", "patient": new_patient.to_dict()}), 201
 
-@app.route('/get_patient', methods=['POST'])
-def get_patient():
-    query = request.json
-    patient = Patient.query.filter_by(
-        name=query.get('name'),
-        nhs_number=query.get('nhs_number'),
-        address=query.get('address'),
-        medical_condition=query.get('medical_condition')
-    ).first()
-    if patient:
-        return jsonify({"patient": patient.to_dict()}), 200
-    else:
-        return jsonify({"error": "Patient not found"}), 404
-
 @app.route('/get_patient/<int:patient_id>', methods=['GET'])
 def get_patient(patient_id):
     patient = Patient.query.get(patient_id)
@@ -75,6 +61,16 @@ def update_patient(patient_id):
 
     db.session.commit()
     return jsonify({"status": "Patient updated", "patient": patient.to_dict()}), 200
+
+@app.route('/delete_patient/<int:patient_id>', methods=['DELETE'])
+def delete_patient(patient_id):
+    patient = Patient.query.get(patient_id)
+    if not patient:
+        return jsonify({"error": "Patient not found"}), 404
+
+    db.session.delete(patient)
+    db.session.commit()
+    return jsonify({"status": "Patient deleted", "patient_id": patient_id}), 200
 
 if __name__ == "__main__":
     with app.app_context():

@@ -60,6 +60,16 @@ def get_hospital(hospital_id):
     else:
         return jsonify({"error": "Hospital not found"}), 404
 
+@app.route('/delete_hospital/<int:hospital_id>', methods=['DELETE'])
+def delete_hospital(hospital_id):
+    hospital = Hospital.query.get(hospital_id)
+    if not hospital:
+        return jsonify({"error": "Hospital not found"}), 404
+
+    db.session.delete(hospital)
+    db.session.commit()
+    return jsonify({"status": "Hospital deleted", "hospital_id": hospital_id}), 200
+
 if __name__ == "__main__":
     with app.app_context():
         db.create_all()
