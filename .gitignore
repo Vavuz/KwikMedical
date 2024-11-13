@@ -1,0 +1,52 @@
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+venv/
+.venv/
+env/
+ENV/
+
+# Docker
+*.log
+*.pid
+*.seed
+*.cover
+*.pidfile
+*.bak
+*.swp
+*.tmp
+*.temp
+**/.DS_Store
+
+# macOS files
+.DS_Store
+
+# Jupyter Notebook Checkpoints
+.ipynb_checkpoints
+
+# SQLAlchemy-migrations and Alembic files
+migrations/
+
+# Docker-related files
+docker-compose.override.yml
+.env
+*.env
+
+# Pytest cache files
+.pytest_cache/
+
+# PyCharm project files
+.idea/
+
+# VSCode project files
+.vscode/
+
+# Backup files
+*.bak
+*.swp
+*.tmp
+*.temp

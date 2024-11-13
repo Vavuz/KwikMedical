@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+  # PostgreSQL for Patient Database Service
+  patient_db:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: patient_db
+    volumes:
+      - patient_db_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  # PostgreSQL for Hospital Database Service
+  hospital_db:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: hospital_db
+    volumes:
+      - hospital_db_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+
+  # Patient Database Microservice
+  patient_database_microservice:
+    build: ./patient_database_microservice
+    environment:
+      - DATABASE_URI=postgresql://user:password@patient_db:5432/patient_db
+    depends_on:
+      - patient_db
+    ports:
+      - "5005:5000"
+
+  # Hospital Database Microservice
+  hospital_database_microservice:
+    build: ./hospital_database_microservice
+    environment:
+      - DATABASE_URI=postgresql://user:password@hospital_db:5432/hospital_db
+    depends_on:
+      - hospital_db
+    ports:
+      - "5003:5000"
+
+  # Ambulance Mobile Microservice
+  ambulance_mobile_microservice:
+    build: ./ambulance_mobile_microservice
+    ports:
+      - "5001:5000"
+
+  # Head Office Microservice
+  head_office_microservice:
+    build: ./head_office_microservice
+    ports:
+      - "5002:5000"
+
+  # Hospital Microservice
+  hospital_microservice:
+    build: ./hospital_microservice
+    ports:
+      - "5004:5000"
+
+
+
+volumes:
+  patient_db_data:
+  hospital_db_data:
