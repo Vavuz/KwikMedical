@@ -47,11 +47,6 @@ def add_hospital():
     db.session.commit()
     return jsonify({"status": "Hospital added", "hospital": new_hospital.to_dict()}), 201
 
-@app.route('/get_hospitals', methods=['GET'])
-def get_hospitals():
-    hospitals = Hospital.query.all()
-    return jsonify({"hospitals": [hospital.to_dict() for hospital in hospitals]}), 200
-
 @app.route('/get_hospital/<int:hospital_id>', methods=['GET'])
 def get_hospital(hospital_id):  
     hospital = Hospital.query.get(hospital_id)
@@ -59,6 +54,11 @@ def get_hospital(hospital_id):
         return jsonify({"hospital": hospital.to_dict()}), 200
     else:
         return jsonify({"error": "Hospital not found"}), 404
+
+@app.route('/get_hospitals', methods=['GET'])
+def get_hospitals():
+    hospitals = Hospital.query.all()
+    return jsonify({"hospitals": [hospital.to_dict() for hospital in hospitals]}), 200
 
 @app.route('/delete_hospital/<int:hospital_id>', methods=['DELETE'])
 def delete_hospital(hospital_id):

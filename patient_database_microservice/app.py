@@ -41,13 +41,27 @@ def add_patient():
     db.session.commit()
     return jsonify({"status": "Patient added", "patient": new_patient.to_dict()}), 201
 
+@app.route('/get_patient', methods=['POST'])
+def get_patient():
+    query_params = request.json
+    patient = Patient.query.filter_by(**query_params).first()
+    if patient:
+        return jsonify({"patient": patient.to_dict()}), 200
+    else:
+        return jsonify({"error": "Patient not found"}), 404
+
 @app.route('/get_patient/<int:patient_id>', methods=['GET'])
-def get_patient(patient_id):
+def get_patient_with_id(patient_id):
     patient = Patient.query.get(patient_id)
     if patient:
         return jsonify({"patient": patient.to_dict()}), 200
     else:
         return jsonify({"error": "Patient not found"}), 404
+
+@app.route('/get_patients', methods=['GET'])
+def get_patients():
+    patients = Patient.query.all()
+    return jsonify({"patients": [patient.to_dict() for patient in patients]}), 200
 
 @app.route('/update_patient/<int:patient_id>', methods=['PUT'])
 def update_patient(patient_id):

@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  # PostgreSQL for Patient Database Service
+
   patient_db:
     image: postgres:13
     environment:
@@ -13,7 +13,6 @@ services:
     ports:
       - "5432:5432"
 
-  # PostgreSQL for Hospital Database Service
   hospital_db:
     image: postgres:13
     environment:
@@ -25,7 +24,6 @@ services:
     ports:
       - "5433:5432"
 
-  # Patient Database Microservice
   patient_database_microservice:
     build: ./patient_database_microservice
     environment:
@@ -35,7 +33,6 @@ services:
     ports:
       - "5005:5000"
 
-  # Hospital Database Microservice
   hospital_database_microservice:
     build: ./hospital_database_microservice
     environment:
@@ -45,24 +42,20 @@ services:
     ports:
       - "5003:5000"
 
-  # Ambulance Mobile Microservice
   ambulance_mobile_microservice:
     build: ./ambulance_mobile_microservice
     ports:
       - "5001:5000"
 
-  # Head Office Microservice
   head_office_microservice:
     build: ./head_office_microservice
     ports:
       - "5002:5000"
 
-  # Hospital Microservice
   hospital_microservice:
     build: ./hospital_microservice
     ports:
       - "5004:5000"
-
 
 
 volumes:
