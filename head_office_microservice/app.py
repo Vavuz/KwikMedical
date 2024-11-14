@@ -1,10 +1,15 @@
 import random
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template, redirect, url_for, session, flash
 import requests
 from config import Config
 
 app = Flask(__name__)
 app.config.from_object(Config)
+
+app.secret_key = 'secret_key'
+
+USERNAME = "headoffice"
+PASSWORD = "password"
 
 PATIENT_DB_SERVICE_URL = 'http://patient_database_microservice:5000'
 HOSPITAL_DB_SERVICE_URL = 'http://hospital_database_microservice:5000'
@@ -35,56 +40,215 @@ def update_hospitals_list():
     except requests.exceptions.RequestException as e:
         print(f"Error updating hospitals list: {e}")
 
-@app.route('/', methods=['GET'])
-def index():
-    return jsonify({"message": "Hello from Head Office Microservice!"})
+@app.route('/view_patients', methods=['GET'])
+def view_patients():
+    try:
+        response = requests.get(f'{PATIENT_DB_SERVICE_URL}/get_patients')
+        patients = response.json().get("patients", [])
+    except Exception as e:
+        flash("Error fetching patients list.")
+        patients = []
+    return render_template('view_patients.html', patients=patients)
 
-@app.route('/add_patient', methods=['POST'])
+@app.route('/view_hospitals', methods=['GET'])
+def view_hospitals():
+    try:
+        response = requests.get(f'{HOSPITAL_DB_SERVICE_URL}/get_hospitals')
+        hospitals = response.json().get("hospitals", [])
+    except Exception as e:
+        flash("Error fetching hospitals list.")
+        hospitals = []
+    return render_template('view_hospitals.html', hospitals=hospitals)
+
+@app.route('/initiate_rescue_request', methods=['POST', 'GET'])
+def initiate_rescue_request():
+    if request.method == 'POST':
+        patient_id = request.form.get('patient_id')
+        if not patient_id:
+            flash("Patient ID is required to initiate a rescue request.")
+            return redirect(url_for('view_patients'))
+
+        try:
+            response = requests.post(f'{HOSPITAL_SERVICE_URL}/prepare_dispatch', json={'patient_id': patient_id})
+            if response.status_code == 200:
+                flash("Rescue request initiated successfully.")
+            else:
+                flash("Failed to initiate rescue request.")
+        except Exception as e:
+            flash("Error initiating rescue request.")
+        return redirect(url_for('view_patients'))
+    
+    return redirect(url_for('dashboard'))
+
+@app.route('/')
+def login():
+    return render_template('login.html', title="Head Office Login")
+
+@app.route('/login', methods=['POST'])
+def handle_login():
+    username = request.form.get('username')
+    password = request.form.get('password')
+
+    if username == USERNAME and password == PASSWORD:
+        session['logged_in'] = True
+        return redirect(url_for('dashboard'))
+    else:
+        flash("Invalid credentials, please try again.")
+        return redirect(url_for('login'))
+
+@app.route('/dashboard')
+def dashboard():
+    if not session.get('logged_in'):
+        return redirect(url_for('login'))
+    update_patients_list()
+    update_hospitals_list()
+    return render_template('dashboard.html', patients=patients_list, hospitals=hospitals_list)
+
+@app.route('/add_patient', methods=['GET', 'POST'])
 def add_patient():
-    patient_data = request.json
-    try:
-        response = requests.post(f'{PATIENT_DB_SERVICE_URL}/add_patient', json=patient_data)
-        if response.status_code == 201:
-            update_patients_list()
-            return jsonify({"status": "Patient added successfully", "data": response.json()}), 201
-        else:
-            return jsonify({"status": "Failed to add patient", "error": response.text}), 500
-    except requests.exceptions.RequestException as e:
-        return jsonify({"status": "Error communicating with Patient Database Service", "error": str(e)}), 500
+    if request.method == 'POST':
+        patient_data = request.form
+        patient_payload = {
+            "name": patient_data.get("name"),
+            "nhs_number": patient_data.get("nhs_number"),
+            "address": patient_data.get("address", ""),
+            "medical_condition": patient_data.get("medical_condition", "")
+        }
+        try:
+            response = requests.post(f'{PATIENT_DB_SERVICE_URL}/add_patient', json=patient_payload)
+            if response.status_code == 201:
+                update_patients_list()
+                return redirect(url_for('view_patients'))
+            else:
+                return f"Failed to add patient: {response.text}", 500
+        except requests.exceptions.RequestException as e:
+            return f"Error communicating with Patient Database Service: {e}", 500
+    return render_template('add_patient.html')
 
-@app.route('/add_hospital', methods=['POST'])
-def add_hospital():
-    hospital_data = request.json
-    try:
-        response = requests.post(f'{HOSPITAL_DB_SERVICE_URL}/add_hospital', json=hospital_data)
-        if response.status_code == 201:
-            update_hospitals_list()
-            return jsonify({"status": "Hospital added successfully", "data": response.json()}), 201
-        else:
-            return jsonify({"status": "Failed to add hospital", "error": response.text}), 500
-    except requests.exceptions.RequestException as e:
-        return jsonify({"status": "Error communicating with Hospital Database Service", "error": str(e)}), 500
+@app.route('/edit_patient/<int:patient_id>', methods=['GET', 'POST'])
+def edit_patient(patient_id):
+    if request.method == 'POST':
+        name = request.form.get('name')
+        nhs_number = request.form.get('nhs_number')
+        address = request.form.get('address') or ""
+        medical_condition = request.form.get('medical_condition') or ""
 
-@app.route('/get_patient', methods=['POST'])
-def get_patient():
-    query_params = request.json
-    try:
-        response = requests.post(f'{PATIENT_DB_SERVICE_URL}/get_patient', json=query_params)
+        updated_data = {
+            "name": name,
+            "nhs_number": nhs_number,
+            "address": address,
+            "medical_condition": medical_condition
+        }
+        response = requests.put(f'{PATIENT_DB_SERVICE_URL}/update_patient/{patient_id}', json=updated_data)
+
         if response.status_code == 200:
-            return jsonify({"status": "Patient found", "patient": response.json().get("patient")}), 200
+            return redirect(url_for('view_patients'))
         else:
-            return jsonify({"status": "Patient not found", "error": response.text}), 404
+            return jsonify({"error": "Failed to update patient"}), 500
+
+    response = requests.get(f'{PATIENT_DB_SERVICE_URL}/get_patient/{patient_id}')
+    if response.status_code == 200:
+        patient = response.json().get('patient')
+        return render_template('edit_patient.html', patient=patient)
+    else:
+        return jsonify({"error": "Patient not found"}), 404
+
+@app.route('/delete_patient/<int:patient_id>', methods=['POST'])
+def delete_patient(patient_id):
+    if not session.get('logged_in'):
+        return redirect(url_for('login'))
+
+    try:
+        response = requests.delete(f'{PATIENT_DB_SERVICE_URL}/delete_patient/{patient_id}')
+        if response.status_code == 200:
+            update_patients_list()
+            flash("Patient deleted successfully.")
+        else:
+            flash("Failed to delete patient.")
     except requests.exceptions.RequestException as e:
-        return jsonify({"status": "Error communicating with Patient Database Service", "error": str(e)}), 500
+        flash(f"Error communicating with Patient Database Service: {e}")
+
+    return redirect(url_for('dashboard'))
+
+@app.route('/add_hospital', methods=['GET', 'POST'])
+def add_hospital():
+    if request.method == 'POST':
+        hospital_data = request.form
+        hospital_payload = {
+            "name": hospital_data.get("name"),
+            "address": hospital_data.get("address")
+        }
+        try:
+            response = requests.post(f'{HOSPITAL_DB_SERVICE_URL}/add_hospital', json=hospital_payload)
+            if response.status_code == 201:
+                update_hospitals_list()
+                return redirect(url_for('view_hospitals'))
+            else:
+                return f"Failed to add hospital: {response.text}", 500
+        except requests.exceptions.RequestException as e:
+            return f"Error communicating with Hospital Database Service: {e}", 500
+    return render_template('add_hospital.html')
+
+@app.route('/edit_hospital/<int:hospital_id>', methods=['GET', 'POST'])
+def edit_hospital(hospital_id):
+    if request.method == 'POST':
+        name = request.form.get('name')
+        address = request.form.get('address')
+
+        updated_data = {"name": name, "address": address}
+        response = requests.put(f'{HOSPITAL_DB_SERVICE_URL}/update_hospital/{hospital_id}', json=updated_data)
+
+        if response.status_code == 200:
+            return redirect(url_for('view_hospitals'))
+        else:
+            return jsonify({"error": "Failed to update hospital"}), 500
+
+    response = requests.get(f'{HOSPITAL_DB_SERVICE_URL}/get_hospital/{hospital_id}')
+    if response.status_code == 200:
+        hospital = response.json().get('hospital')
+        return render_template('edit_hospital.html', hospital=hospital)
+    else:
+        return jsonify({"error": "Hospital not found"}), 404
+    
+@app.route('/delete_hospital/<int:hospital_id>', methods=['POST'])
+def delete_hospital(hospital_id):
+    if not session.get('logged_in'):
+        return redirect(url_for('login'))
+
+    try:
+        response = requests.delete(f'{HOSPITAL_DB_SERVICE_URL}/delete_hospital/{hospital_id}')
+        if response.status_code == 200:
+            update_hospitals_list()
+            flash("Hospital deleted successfully.")
+        else:
+            flash("Failed to delete hospital.")
+    except requests.exceptions.RequestException as e:
+        flash(f"Error communicating with Hospital Database Service: {e}")
+
+    return redirect(url_for('dashboard'))
+
+@app.route('/confirm_rescue_request/<int:patient_id>', methods=['GET', 'POST'])
+def confirm_rescue_request(patient_id):
+    if request.method == 'POST':
+        response = requests.post(f'http://localhost:5000/prepare_dispatch', json={"patient_id": patient_id})
+        if response.status_code == 200:
+            flash('Rescue request has been successfully initiated.', 'success')
+        else:
+            flash('Failed to initiate rescue request.', 'error')
+        return redirect(url_for('view_patients'))
+
+    patient_info = next((p for p in patients_list if p['id'] == patient_id), None)
+    return render_template('confirm_rescue.html', patient=patient_info)
+
 
 @app.route('/prepare_dispatch', methods=['POST'])
 def prepare_dispatch():
     data = request.json
     patient_id = data.get("patient_id")
-    
+
     if not patient_id:
         return jsonify({"error": "Patient ID is required"}), 400
-    
+
     try:
         patient_response = requests.get(f'{PATIENT_DB_SERVICE_URL}/get_patient/{patient_id}')
         if patient_response.status_code != 200:
@@ -102,7 +266,7 @@ def prepare_dispatch():
         "best_way": best_way,
         "hospital_id": closest_hospital['id']
     }
-    
+
     try:
         hospital_response = requests.post(f'{HOSPITAL_SERVICE_URL}/prepare_dispatch', json=dispatch_data)
         if hospital_response.status_code == 200:
@@ -145,32 +309,9 @@ def find_closest_hospital(address):
     else:
         return {"id": None, "name": "No available hospital"}
 
-@app.route('/delete_patient/<int:patient_id>', methods=['DELETE'])
-def delete_patient(patient_id):
-    try:
-        response = requests.delete(f'{PATIENT_DB_SERVICE_URL}/delete_patient/{patient_id}')
-        if response.status_code == 200:
-            update_patients_list()
-        return jsonify(response.json()), response.status_code
-    except requests.exceptions.RequestException as e:
-        return jsonify({"status": "Error communicating with Patient Database Service", "error": str(e)}), 500
-
-@app.route('/delete_hospital/<int:hospital_id>', methods=['DELETE'])
-def delete_hospital(hospital_id):
-    try:
-        response = requests.delete(f'{HOSPITAL_DB_SERVICE_URL}/delete_hospital/{hospital_id}')
-        if response.status_code == 200:
-            update_hospitals_list()
-        return jsonify(response.json()), response.status_code
-    except requests.exceptions.RequestException as e:
-        return jsonify({"status": "Error communicating with Hospital Database Service", "error": str(e)}), 500
-
-@app.route('/trigger_update_patients_list', methods=['POST'])
-def trigger_update_patients_list():
-    update_patients_list()
-    return jsonify({"status": "Patients list updated"}), 200
-
+app.secret_key = 'secret_key'
 
 if __name__ == "__main__":
     update_patients_list()
+    update_hospitals_list()
     app.run(host="0.0.0.0", port=5000)

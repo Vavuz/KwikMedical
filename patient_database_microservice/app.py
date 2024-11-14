@@ -70,6 +70,14 @@ def update_patient(patient_id):
     if not patient:
         return jsonify({"error": "Patient not found"}), 404
 
+    if 'name' in data:
+        patient.name = data['name']
+    if 'nhs_number' in data:
+        patient.nhs_number = data['nhs_number']
+    if 'address' in data:
+        patient.address = data['address']
+    if 'medical_condition' in data:
+        patient.medical_condition = data['medical_condition']
     if 'call_out_details' in data:
         patient.call_out_details = data['call_out_details']
 

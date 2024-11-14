@@ -60,6 +60,22 @@ def get_hospitals():
     hospitals = Hospital.query.all()
     return jsonify({"hospitals": [hospital.to_dict() for hospital in hospitals]}), 200
 
+@app.route('/update_hospital/<int:hospital_id>', methods=['PUT'])
+def update_hospital(hospital_id):
+    data = request.json
+    hospital = Hospital.query.get(hospital_id)
+    
+    if not hospital:
+        return jsonify({"error": "Hospital not found"}), 404
+
+    if 'name' in data:
+        hospital.name = data['name']
+    if 'address' in data:
+        hospital.address = data['address']
+
+    db.session.commit()
+    return jsonify({"status": "Hospital updated", "hospital": hospital.to_dict()}), 200
+
 @app.route('/delete_hospital/<int:hospital_id>', methods=['DELETE'])
 def delete_hospital(hospital_id):
     hospital = Hospital.query.get(hospital_id)

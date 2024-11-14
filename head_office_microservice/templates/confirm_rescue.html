@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Confirm Rescue Request</title>
+</head>
+<body>
+    <h2>Confirm Rescue Request</h2>
+    <p>Are you sure you want to initiate a rescue request for {{ patient.name }}?</p>
+    
+    <form method="post">
+        <button type="submit">Yes, initiate rescue</button>
+        <a href="{{ url_for('view_patients') }}">Cancel</a>
+    </form>
+</body>
+</html>
