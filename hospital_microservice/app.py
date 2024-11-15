@@ -1,21 +1,61 @@
-from flask import Flask, request, jsonify
+import random
+from flask import Flask, request, jsonify, render_template, redirect, url_for, session, flash
 import requests
 from config import Config
 
 app = Flask(__name__)
 app.config.from_object(Config)
 
-AMBULANCE_MOBILE_SERVICE_URL = 'http://ambulance_mobile_microservice:5000'
-PATIENT_DATABASE_SERVICE_URL = 'http://patient_database_microservice:5000'
+app.secret_key = 'secret_key'
+
+USERNAME = "hospital"
+PASSWORD = "password"
+
+AMBULANCE_SERVICE_URL = 'http://ambulance_mobile_microservice:5000'
+PATIENT_DB_SERVICE_URL = 'http://patient_database_microservice:5000'
 HEAD_OFFICE_SERVICE_URL = 'http://head_office_microservice:5000'
 
 ready_dispatch_requests = {}
 dispatched_requests = {}
 call_out_updates = {}
 
-@app.route('/', methods=['GET'])
-def index():
-    return jsonify({"message": "Hello from Hospital Microservice!"})
+@app.route('/')
+def login():
+    return render_template('login.html', title="Hospital Login")
+
+@app.route('/login', methods=['POST'])
+def handle_login():
+    username = request.form.get('username')
+    password = request.form.get('password')
+    
+    if username == USERNAME and password == PASSWORD:
+        session['logged_in'] = True
+        return redirect(url_for('dashboard'))
+    else:
+        flash("Invalid credentials, please try again.")
+        return redirect(url_for('login'))
+
+@app.route('/dashboard')
+def dashboard():
+    if not session.get('logged_in'):
+        return redirect(url_for('login'))
+    return render_template(
+        'dashboard.html',
+        title="Hospital Dashboard",
+        ready_dispatch_requests=ready_dispatch_requests,
+        dispatched_requests=dispatched_requests,
+        call_out_updates=call_out_updates
+    )
+
+
+def get_patient_medical_record(patient_id):
+    try:
+        response = requests.get(f'{PATIENT_DB_SERVICE_URL}/get_patient/{patient_id}')
+        if response.status_code == 200:
+            return response.json().get('patient')
+    except requests.exceptions.RequestException as e:
+        print(f"Error retrieving patient data: {e}")
+    return None
 
 @app.route('/prepare_dispatch', methods=['POST'])
 def prepare_dispatch():
@@ -24,37 +64,47 @@ def prepare_dispatch():
     best_way = data.get('best_way')
     hospital_id = data.get('hospital_id')
 
-    if not (patient_id and best_way and hospital_id):
-        return jsonify({"error": "Missing required dispatch information"}), 400
-
-    ready_dispatch_requests[patient_id] = {
-        "patient_id": patient_id,
-        "best_way": best_way,
-        "hospital_id": hospital_id,
-    }
-    return jsonify({"status": "Dispatch information saved and ready"}), 200
+    if patient_id and best_way and hospital_id:
+        ready_dispatch_requests[patient_id] = {
+            "patient_id": patient_id,
+            "best_way": best_way,
+            "hospital_id": hospital_id
+        }
+        return jsonify({"status": "Dispatch information received and ready"}), 200
+    return jsonify({"error": "Incomplete dispatch data"}), 400
 
 @app.route('/dispatch_ambulance/<int:patient_id>', methods=['POST'])
 def dispatch_ambulance(patient_id):
     dispatch_data = ready_dispatch_requests.pop(patient_id, None)
     if not dispatch_data:
-        return jsonify({"status": "No ready dispatch information found for this patient"}), 404
-
+        flash("No dispatch information found for this patient.")
+        return redirect(url_for('dashboard'))
+    
     medical_record = get_patient_medical_record(patient_id)
     if not medical_record:
-        return jsonify({"status": "Failed to retrieve medical record"}), 404
+        flash("Failed to retrieve patient medical record.")
+        return redirect(url_for('dashboard'))
+
+    payload = {
+        "patient_id": medical_record["id"],
+        "name": medical_record.get("name"),
+        "nhs_number": medical_record.get("nhs_number"),
+        "address": medical_record.get("address"),
+        "medical_condition": medical_record.get("medical_condition")
+    }
 
     try:
-        response = requests.post(f'{AMBULANCE_MOBILE_SERVICE_URL}/receive_medical_record', json=medical_record)
+        response = requests.post(f'{AMBULANCE_SERVICE_URL}/receive_medical_record', json=payload)
         if response.status_code == 200:
             dispatched_requests[patient_id] = dispatch_data
-            return jsonify({"status": "Ambulance dispatched and medical record sent"}), 200
+            flash("Ambulance dispatched and medical record sent.")
         else:
             ready_dispatch_requests[patient_id] = dispatch_data
-            return jsonify({"status": "Failed to send medical record", "error": response.text}), 500
+            flash("Failed to dispatch ambulance. Please try again.")
     except requests.exceptions.RequestException as e:
         ready_dispatch_requests[patient_id] = dispatch_data
-        return jsonify({"status": "Error communicating with Ambulance Mobile Service", "error": str(e)}), 500
+        flash(f"Communication error with Ambulance Service: {e}")
+    return redirect(url_for('dashboard'))
 
 @app.route('/receive_call_out_details', methods=['POST'])
 def receive_call_out_details():
@@ -64,36 +114,16 @@ def receive_call_out_details():
     
     if patient_id and call_out_details:
         call_out_updates[patient_id] = call_out_details
-        update_patient_record(patient_id, call_out_details)
-        return jsonify({"status": "Call-out details updated"}), 200
+        flash("Call-out details updated successfully.")
     else:
-        return jsonify({"error": "Missing patient ID or call-out details"}), 400
+        flash("Failed to update call-out details. Patient ID or details missing.")
+    return redirect(url_for('dashboard'))
 
-def get_patient_medical_record(patient_id):
-    try:
-        response = requests.get(f'{PATIENT_DATABASE_SERVICE_URL}/get_patient/{patient_id}')
-        if response.status_code == 200:
-            return response.json().get('patient')
-        else:
-            return None
-    except requests.exceptions.RequestException:
-        return None
-
-def update_patient_record(patient_id, call_out_details):
-    update_data = {
-        "call_out_details": call_out_details
-    }
-    try:
-        response = requests.put(f'{PATIENT_DATABASE_SERVICE_URL}/update_patient/{patient_id}', json=update_data)
-        if response.status_code != 200:
-            print(f"Failed to update patient record: {response.text}")
-        else:
-            try:
-                requests.post(f'{HEAD_OFFICE_SERVICE_URL}/trigger_update_patients_list')
-            except requests.exceptions.RequestException as e:
-                print(f"Error notifying Head Office to update patients list: {e}")
-    except requests.exceptions.RequestException as e:
-        print(f"Error communicating with Patient Database Service: {e}")
+@app.route('/logout')
+def logout():
+    session.pop('logged_in', None)
+    flash("You have been logged out.")
+    return redirect(url_for('login'))
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)

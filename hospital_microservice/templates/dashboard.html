@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Hospital Dashboard</title>
+</head>
+<body>
+    <h2>Hospital Dashboard</h2>
+    
+    <h3>Ready Dispatch Requests:</h3>
+    <ul>
+        {% if ready_dispatch_requests %}
+            {% for patient_id, request in ready_dispatch_requests.items() %}
+                <li>
+                    Patient ID: {{ patient_id }}, Best Way: {{ request['best_way'] }}
+                    <form action="{{ url_for('dispatch_ambulance', patient_id=patient_id) }}" method="post">
+                        <button type="submit">Dispatch Ambulance</button>
+                    </form>
+                </li>
+            {% endfor %}
+        {% else %}
+            <li>No dispatch requests available.</li>
+        {% endif %}
+    </ul>
+
+    <h3>Dispatched Requests:</h3>
+    <ul>
+        {% if dispatched_requests %}
+            {% for patient_id, request in dispatched_requests.items() %}
+                <li>Patient ID: {{ patient_id }}, Status: Dispatched</li>
+            {% endfor %}
+        {% else %}
+            <li>No dispatched requests.</li>
+        {% endif %}
+    </ul>
+
+    <h3>Received Call-out Details:</h3>
+    <ul>
+        {% if call_out_updates %}
+            {% for patient_id, details in call_out_updates.items() %}
+                <li>Patient ID: {{ patient_id }}, Call-out Details: {{ details }}</li>
+            {% endfor %}
+        {% else %}
+            <li>No call-out details received.</li>
+        {% endif %}
+    </ul>
+    
+    <a href="{{ url_for('logout') }}">Logout</a>
+</body>
+</html>
