@@ -46,6 +46,13 @@
             <li>No call-out details received.</li>
         {% endif %}
     </ul>
+
+    <h3>Look up Patient:</h3>
+    <ul>
+        <li>
+            <a href="{{ url_for('view_patients') }}">View All Patients</a>
+        </li>
+    </ul>
     
     <a href="{{ url_for('logout') }}">Logout</a>
 </body>

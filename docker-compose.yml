@@ -41,6 +41,10 @@ services:
       - hospital_db
     ports:
       - "5003:5000"
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 10s
 
   ambulance_mobile_microservice:
     build: ./ambulance_mobile_microservice

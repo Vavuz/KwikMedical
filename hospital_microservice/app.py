@@ -1,3 +1,4 @@
+import json
 import random
 from flask import Flask, request, jsonify, render_template, redirect, url_for, session, flash
 import requests
@@ -57,6 +58,55 @@ def get_patient_medical_record(patient_id):
         print(f"Error retrieving patient data: {e}")
     return None
 
+@app.route('/view_patients', methods=['GET'])
+def view_patients():
+    patient_id = request.args.get('patient_id')
+    if patient_id:
+        try:
+            response = requests.get(f'{PATIENT_DB_SERVICE_URL}/get_patient/{patient_id}')
+            if response.status_code == 200:
+                patient = response.json().get("patient")
+                if patient:
+                    call_out_details = patient.get('call_out_details')
+                    if call_out_details:
+                        try:
+                            patient['call_out_details'] = json.loads(call_out_details)
+                            if not isinstance(patient['call_out_details'], list):
+                                patient['call_out_details'] = ["Invalid call-out details format"]
+                        except (json.JSONDecodeError, TypeError):
+                            patient['call_out_details'] = ["Invalid call-out details format"]
+                    else:
+                        patient['call_out_details'] = ["No call-out details"]
+                    return render_template('view_patients.html', patients=[patient])
+                else:
+                    flash(f"No patient found with ID {patient_id}")
+            else:
+                flash("Error fetching patient details.")
+        except Exception as e:
+            flash("Error fetching patient details.")
+        return render_template('view_patients.html', patients=[])
+    else:
+        try:
+            response = requests.get(f'{PATIENT_DB_SERVICE_URL}/get_patients')
+            patients = response.json().get("patients", [])
+        except Exception as e:
+            flash("Error fetching patients list.")
+            patients = []
+
+        for patient in patients:
+            call_out_details = patient.get('call_out_details')
+            if call_out_details:
+                try:
+                    patient['call_out_details'] = json.loads(call_out_details)
+                    if not isinstance(patient['call_out_details'], list):
+                        patient['call_out_details'] = ["Invalid call-out details format"]
+                except (json.JSONDecodeError, TypeError):
+                    patient['call_out_details'] = ["Invalid call-out details format"]
+            else:
+                patient['call_out_details'] = ["No call-out details"]
+        
+        return render_template('view_patients.html', patients=patients)
+    
 @app.route('/prepare_dispatch', methods=['POST'])
 def prepare_dispatch():
     data = request.json
