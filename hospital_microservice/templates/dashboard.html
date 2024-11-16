@@ -12,7 +12,9 @@
         {% if ready_dispatch_requests %}
             {% for patient_id, request in ready_dispatch_requests.items() %}
                 <li>
-                    Patient ID: {{ patient_id }}, Best Way: {{ request['best_way'] }}
+                    Patient ID: {{ patient_id }}, 
+                    Hospital ID: {{ request['hospital_id'] }}, 
+                    Best Way: {{ request['best_way'] }}
                     <form action="{{ url_for('dispatch_ambulance', patient_id=patient_id) }}" method="post">
                         <button type="submit">Dispatch Ambulance</button>
                     </form>
@@ -27,7 +29,11 @@
     <ul>
         {% if dispatched_requests %}
             {% for patient_id, request in dispatched_requests.items() %}
-                <li>Patient ID: {{ patient_id }}, Status: Dispatched</li>
+                <li>
+                    Patient ID: {{ patient_id }}, 
+                    Hospital ID: {{ request['hospital_id'] }}, 
+                    Status: Dispatched
+                </li>
             {% endfor %}
         {% else %}
             <li>No dispatched requests.</li>
@@ -38,7 +44,9 @@
     <ul>
         {% if call_out_updates %}
             {% for patient_id, details in call_out_updates.items() %}
-                <li>Patient ID: {{ patient_id }}, Call-out Details: 
+                <li>
+                    Patient ID: {{ patient_id }}, 
+                    Call-out Details: 
                     {{ details|join(', ') if details is iterable else details }}
                 </li>
             {% endfor %}

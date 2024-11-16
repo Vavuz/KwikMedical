@@ -31,11 +31,11 @@
                 <td>{{ patient.address }}</td>
                 <td>{{ patient.medical_condition }}</td>
                 <td>
-                    <ul>
-                        {% for detail in patient.call_out_details %}
-                        <li>{{ detail }}</li>
-                        {% endfor %}
-                    </ul>
+                    {% if patient.call_out_details %}
+                        {{ patient.call_out_details[0] }}
+                    {% else %}
+                        No call-out details
+                    {% endif %}
                 </td>
             </tr>
             {% endfor %}
