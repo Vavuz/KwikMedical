@@ -110,14 +110,37 @@ def dispatch_ambulance(patient_id):
 def receive_call_out_details():
     data = request.json
     patient_id = data.get('patient_id')
-    call_out_details = data.get('call_out_details')
-    
-    if patient_id and call_out_details:
-        call_out_updates[patient_id] = call_out_details
-        flash("Call-out details updated successfully.")
-    else:
-        flash("Failed to update call-out details. Patient ID or details missing.")
-    return redirect(url_for('dashboard'))
+    new_call_out_details = data.get('call_out_details')
+
+    if not patient_id or not new_call_out_details:
+        return jsonify({"error": "Patient ID or call-out details missing"}), 400
+
+    try:
+        response = requests.get(f'{PATIENT_DB_SERVICE_URL}/get_patient/{patient_id}')
+        if response.status_code != 200:
+            return jsonify({"error": f"Failed to fetch patient with ID {patient_id}"}), 404
+
+        patient_data = response.json().get('patient')
+
+        existing_call_out_details = patient_data.get('call_out_details', [])
+        if not isinstance(existing_call_out_details, list):
+            existing_call_out_details = []
+
+        updated_call_out_details = existing_call_out_details + [new_call_out_details]
+
+        update_payload = {
+            "call_out_details": updated_call_out_details
+        }
+        update_response = requests.put(f'{PATIENT_DB_SERVICE_URL}/update_patient/{patient_id}', json=update_payload)
+
+        if update_response.status_code == 200:
+            call_out_updates[patient_id] = updated_call_out_details
+            return jsonify({"status": "Call-out details updated successfully"}), 200
+        else:
+            return jsonify({"error": "Failed to update patient call-out details"}), 500
+
+    except requests.exceptions.RequestException as e:
+        return jsonify({"error": f"Error communicating with Patient Database Service: {str(e)}"}), 500
 
 @app.route('/logout')
 def logout():

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Ambulance Dashboard</title>
+</head>
+<body>
+    <h2>Ambulance Dashboard</h2>
+
+    <h3>Received Dispatches:</h3>
+    <ul>
+        {% if received_dispatches %}
+            {% for patient_id, details in received_dispatches.items() %}
+                <li>
+                    <h4>Patient ID: {{ patient_id }}</h4>
+                    <p><strong>Name:</strong> {{ details['name'] }}</p>
+                    <p><strong>NHS Number:</strong> {{ details['nhs_number'] }}</p>
+                    <p><strong>Address:</strong> {{ details['address'] }}</p>
+                    <p><strong>Medical Condition:</strong> {{ details['medical_condition'] }}</p>
+
+                    <form action="{{ url_for('send_call_out_details', patient_id=patient_id) }}" method="post">
+                        <label for="call_out_details_{{ patient_id }}">Call-out Details:</label>
+                        <textarea name="call_out_details" id="call_out_details_{{ patient_id }}" rows="2" required></textarea>
+                        <button type="submit">Send Call-out Details</button>
+                    </form>
+                </li>
+                <hr>
+            {% endfor %}
+        {% else %}
+            <li>No dispatches received.</li>
+        {% endif %}
+    </ul>
+
+    <a href="{{ url_for('logout') }}">Logout</a>
+</body>
+</html>

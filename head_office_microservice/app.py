@@ -2,6 +2,7 @@ import random
 from flask import Flask, request, jsonify, render_template, redirect, url_for, session, flash
 import requests
 from config import Config
+import json
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -48,6 +49,19 @@ def view_patients():
     except Exception as e:
         flash("Error fetching patients list.")
         patients = []
+
+    for patient in patients:
+        call_out_details = patient.get('call_out_details')
+        if call_out_details:
+            try:
+                patient['call_out_details'] = json.loads(call_out_details)
+                if not isinstance(patient['call_out_details'], list):
+                    patient['call_out_details'] = ["Invalid call-out details format"]
+            except (json.JSONDecodeError, TypeError):
+                patient['call_out_details'] = ["Invalid call-out details format"]
+        else:
+            patient['call_out_details'] = ["No call-out details"]
+
     return render_template('view_patients.html', patients=patients)
 
 @app.route('/view_hospitals', methods=['GET'])
@@ -161,14 +175,13 @@ def delete_patient(patient_id):
     try:
         response = requests.delete(f'{PATIENT_DB_SERVICE_URL}/delete_patient/{patient_id}')
         if response.status_code == 200:
-            update_patients_list()
             flash("Patient deleted successfully.")
         else:
             flash("Failed to delete patient.")
     except requests.exceptions.RequestException as e:
         flash(f"Error communicating with Patient Database Service: {e}")
 
-    return redirect(url_for('dashboard'))
+    return redirect(url_for('view_patients'))
 
 @app.route('/add_hospital', methods=['GET', 'POST'])
 def add_hospital():

@@ -1,3 +1,4 @@
+import json
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from config import Config
@@ -79,7 +80,10 @@ def update_patient(patient_id):
     if 'medical_condition' in data:
         patient.medical_condition = data['medical_condition']
     if 'call_out_details' in data:
-        patient.call_out_details = data['call_out_details']
+        if isinstance(data['call_out_details'], list):
+            patient.call_out_details = json.dumps(data['call_out_details'])
+        else:
+            return jsonify({"error": "Invalid format for call_out_details, must be a list"}), 400
 
     db.session.commit()
     return jsonify({"status": "Patient updated", "patient": patient.to_dict()}), 200

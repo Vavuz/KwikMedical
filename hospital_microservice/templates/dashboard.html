@@ -38,7 +38,9 @@
     <ul>
         {% if call_out_updates %}
             {% for patient_id, details in call_out_updates.items() %}
-                <li>Patient ID: {{ patient_id }}, Call-out Details: {{ details }}</li>
+                <li>Patient ID: {{ patient_id }}, Call-out Details: 
+                    {{ details|join(', ') if details is iterable else details }}
+                </li>
             {% endfor %}
         {% else %}
             <li>No call-out details received.</li>
