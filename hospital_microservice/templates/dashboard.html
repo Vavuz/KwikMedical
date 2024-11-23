@@ -2,66 +2,73 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
     <title>Hospital Dashboard</title>
 </head>
 <body>
     <h2>Hospital Dashboard</h2>
-    
-    <h3>Ready Dispatch Requests:</h3>
-    <ul>
-        {% if ready_dispatch_requests %}
-            {% for patient_id, request in ready_dispatch_requests.items() %}
+
+    <div class="card">
+        <h3 class="section-title">Ready Dispatch Requests</h3>
+        <ul>
+            {% if ready_dispatch_requests %}
+                {% for patient_id, request in ready_dispatch_requests.items() %}
                 <li>
-                    Patient ID: {{ patient_id }}, 
-                    Hospital ID: {{ request['hospital_id'] }}, 
-                    Best Way: {{ request['best_way'] }}
-                    <form action="{{ url_for('dispatch_ambulance', patient_id=patient_id) }}" method="post">
+                    <strong>Patient ID:</strong> {{ patient_id }},
+                    <strong>Hospital ID:</strong> {{ request['hospital_id'] }},
+                    <strong>Best Way:</strong> {{ request['best_way'] }}
+                    <form action="{{ url_for('dispatch_ambulance', patient_id=patient_id) }}" method="post" style="margin-top: 10px;">
                         <button type="submit">Dispatch Ambulance</button>
                     </form>
                 </li>
-            {% endfor %}
-        {% else %}
-            <li>No dispatch requests available.</li>
-        {% endif %}
-    </ul>
+                {% endfor %}
+            {% else %}
+                <li>No dispatch requests available.</li>
+            {% endif %}
+        </ul>
+    </div>
 
-    <h3>Dispatched Requests:</h3>
-    <ul>
-        {% if dispatched_requests %}
-            {% for patient_id, request in dispatched_requests.items() %}
+    <div class="card">
+        <h3 class="section-title">Dispatched Requests</h3>
+        <ul>
+            {% if dispatched_requests %}
+                {% for patient_id, request in dispatched_requests.items() %}
                 <li>
-                    Patient ID: {{ patient_id }}, 
-                    Hospital ID: {{ request['hospital_id'] }}, 
-                    Status: Dispatched
+                    <strong>Patient ID:</strong> {{ patient_id }},
+                    <strong>Hospital ID:</strong> {{ request['hospital_id'] }},
+                    <strong>Status:</strong> Dispatched
                 </li>
-            {% endfor %}
-        {% else %}
-            <li>No dispatched requests.</li>
-        {% endif %}
-    </ul>
+                {% endfor %}
+            {% else %}
+                <li>No dispatched requests.</li>
+            {% endif %}
+        </ul>
+    </div>
 
-    <h3>Received Call-out Details:</h3>
-    <ul>
-        {% if call_out_updates %}
-            {% for patient_id, details in call_out_updates.items() %}
+    <div class="card">
+        <h3 class="section-title">Received Call-out Details</h3>
+        <ul>
+            {% if call_out_updates %}
+                {% for patient_id, details in call_out_updates.items() %}
                 <li>
-                    Patient ID: {{ patient_id }}, 
-                    Call-out Details: 
+                    <strong>Patient ID:</strong> {{ patient_id }},
+                    <strong>Call-out Details:</strong> 
                     {{ details|join(', ') if details is iterable else details }}
                 </li>
-            {% endfor %}
-        {% else %}
-            <li>No call-out details received.</li>
-        {% endif %}
-    </ul>
+                {% endfor %}
+            {% else %}
+                <li>No call-out details received.</li>
+            {% endif %}
+        </ul>
+    </div>
 
-    <h3>Look up Patient:</h3>
-    <ul>
-        <li>
-            <a href="{{ url_for('view_patients') }}">View All Patients</a>
-        </li>
-    </ul>
-    
-    <a href="{{ url_for('logout') }}">Logout</a>
+    <div class="card">
+        <h3 class="section-title">Look up Patient</h3>
+        <a href="{{ url_for('view_patients') }}" class="action-link">View All Patients</a>
+    </div>
+
+    <div class="card">
+        <a href="{{ url_for('logout') }}" class="action-link">Logout</a>
+    </div>
 </body>
 </html>

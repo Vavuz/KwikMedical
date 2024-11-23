@@ -1,0 +1,161 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #ffd7d7;
+    color: #333;
+    line-height: 1.6;
+}
+
+h1, h2, h3 {
+    color: #d9534f;
+    text-align: center;
+}
+
+a {
+    color: #d9534f;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+.login-card {
+    max-width: 400px;
+    margin: 100px auto;
+    background: #fff;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+.login-card h2 {
+    color: #d9534f;
+    margin-bottom: 20px;
+}
+
+.login-card form {
+    padding: 0;
+    box-shadow: none;
+    border-radius: 0;
+}
+
+form {
+    background: #fff;
+    padding: 15px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+form label {
+    font-weight: bold;
+    display: block;
+    margin-bottom: 5px;
+}
+
+form textarea, form input, form button {
+    width: 100%;
+    padding: 10px;
+    margin-top: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+form textarea::placeholder,
+form input::placeholder {
+    color: #ccc;
+}
+
+form button {
+    background: #d9534f;
+    color: #fff;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+form button:hover {
+    background: #c9302c;
+}
+
+ul {
+    list-style: none;
+    padding: 0;
+}
+
+ul li {
+    background: #fff;
+    margin-bottom: 10px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+}
+
+ul li:hover {
+    background: #f9f9f9;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    background: #fff;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+table th, table td {
+    padding: 15px;
+    border: 1px solid #ddd;
+}
+
+table th {
+    background: #d9534f;
+    color: #fff;
+}
+
+table tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+table tr:hover {
+    background-color: #fdf2e3;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.action-buttons a, .action-buttons button {
+    padding: 8px 15px;
+    border-radius: 5px;
+    font-size: 14px;
+    text-align: center;
+    border: none;
+    cursor: pointer;
+}
+
+.action-buttons a {
+    background-color: #5bc0de;
+    color: white;
+}
+
+.action-buttons a:hover {
+    background-color: #31b0d5;
+    color: white;
+}
+
+.action-buttons .delete-button {
+    background-color: red;
+    color: white;
+}
+
+.action-buttons .delete-button:hover {
+    background-color: darkred;
+}

@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
     <title>View Patients</title>
 </head>
 <body>
@@ -27,7 +28,13 @@
                 <td>{{ patient.name }}</td>
                 <td>{{ patient.nhs_number }}</td>
                 <td>{{ patient.address }}</td>
-                <td>{{ patient.medical_condition }}</td>
+                <td>
+                    {% if patient.medical_condition %}
+                        {{ patient.medical_condition }}
+                    {% else %}
+                        No medical condition
+                    {% endif %}
+                </td>
                 <td>
                     {% if patient.call_out_details %}
                         {{ patient.call_out_details[0] }}
@@ -35,12 +42,12 @@
                         No call-out details
                     {% endif %}
                 </td>
-                <td>
-                    <a href="{{ url_for('edit_patient', patient_id=patient.id) }}">Edit</a> |
+                <td class="action-buttons">
+                    <a href="{{ url_for('edit_patient', patient_id=patient.id) }}">Edit</a>
                     <form action="{{ url_for('delete_patient', patient_id=patient.id) }}" method="post" style="display: inline;">
-                        <button type="submit">Delete</button>
-                    </form> |
-                    <a href="{{ url_for('confirm_rescue_request', patient_id=patient.id) }}">Initiate Rescue Request</a>
+                        <button class="delete-button" type="submit">Delete</button>
+                    </form>
+                    <a href="{{ url_for('confirm_rescue_request', patient_id=patient.id) }}">Rescue</a>
                 </td>
             </tr>
             {% endfor %}

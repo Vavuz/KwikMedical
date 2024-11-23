@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
     <title>View Hospitals</title>
 </head>
 <body>
@@ -21,10 +22,10 @@
                 <td>{{ hospital.id }}</td>
                 <td>{{ hospital.name }}</td>
                 <td>{{ hospital.address }}</td>
-                <td>
+                <td class="action-buttons">
                     <a href="/edit_hospital/{{ hospital.id }}">Edit</a>
-                    <form action="/delete_hospital/{{ hospital.id }}" method="post" style="display:inline;">
-                        <button type="submit">Delete</button>
+                    <form action="/delete_hospital/{{ hospital.id }}" method="post" style="display: inline;">
+                        <button class="delete-button" type="submit">Delete</button>
                     </form>
                 </td>
             </tr>

@@ -2,18 +2,22 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Ambulance Login</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
+    <title>Ambulance Mobile Login</title>
 </head>
 <body>
-    <h2>Ambulance Login Page</h2>
-    <form action="{{ url_for('handle_login') }}" method="post">
-        <label for="username">Username:</label>
-        <input type="text" id="username" name="username" required><br><br>
+    <div class="card login-card">
+        <h2 class="section-title">Ambulance Mobile Login Page</h2>
+        <form action="{{ url_for('handle_login') }}" method="post">
+            <label for="username">Username:</label>
+            <input type="text" id="username" name="username" placeholder="Enter your username" required>
 
-        <label for="password">Password:</label>
-        <input type="password" id="password" name="password" required><br><br>
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" placeholder="Enter your password" required>
 
-        <button type="submit">Login</button>
-    </form>
+            <button type="submit">Login</button>
+        </form>
+        <footer>© 2024 KwikMedical</footer>
+    </div>
 </body>
 </html>

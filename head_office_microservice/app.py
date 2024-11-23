@@ -322,6 +322,12 @@ def find_closest_hospital(address):
     else:
         return {"id": None, "name": "No available hospital"}
 
+@app.route('/logout')
+def logout():
+    session.pop('logged_in', None)
+    flash("You have been logged out.")
+    return redirect(url_for('login'))
+
 app.secret_key = 'secret_key'
 
 if __name__ == "__main__":

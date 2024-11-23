@@ -2,47 +2,51 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
     <title>View Patients</title>
 </head>
 <body>
-    <h2>Patient List</h2>
+    <div class="card">
+        <h2 class="section-title">Patient List</h2>
 
-    <form method="get" action="{{ url_for('view_patients') }}">
-        <label for="patientIdSearch">Search by Patient ID:</label>
-        <input type="text" id="patientIdSearch" name="patient_id" placeholder="Enter Patient ID">
-        <button type="submit">Search</button>
-    </form>
+        <form method="get" action="{{ url_for('view_patients') }}" class="search-form">
+            <label for="patientIdSearch">Search by Patient ID:</label>
+            <div class="search-container">
+                <input type="text" id="patientIdSearch" name="patient_id" placeholder="Enter Patient ID">
+                <button type="submit">Search</button>
+            </div>
+        </form>
 
-    <table>
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>NHS Number</th>
-                <th>Address</th>
-                <th>Medical Condition</th>
-                <th>Call-out Details</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for patient in patients %}
-            <tr>
-                <td>{{ patient.name }}</td>
-                <td>{{ patient.nhs_number }}</td>
-                <td>{{ patient.address }}</td>
-                <td>{{ patient.medical_condition }}</td>
-                <td>
-                    {% if patient.call_out_details %}
-                        {{ patient.call_out_details[0] }}
-                    {% else %}
-                        No call-out details
-                    {% endif %}
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    
-    <br>
-    <a href="{{ url_for('dashboard') }}">Back to Dashboard</a>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>NHS Number</th>
+                    <th>Address</th>
+                    <th>Medical Condition</th>
+                    <th>Call-out Details</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for patient in patients %}
+                <tr>
+                    <td>{{ patient.name }}</td>
+                    <td>{{ patient.nhs_number }}</td>
+                    <td>{{ patient.address }}</td>
+                    <td>{{ patient.medical_condition }}</td>
+                    <td>
+                        {% if patient.call_out_details %}
+                            {{ patient.call_out_details[0] }}
+                        {% else %}
+                            No call-out details
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <a href="{{ url_for('dashboard') }}" class="action-link">Back to Dashboard</a>
+    </div>
 </body>
 </html>
